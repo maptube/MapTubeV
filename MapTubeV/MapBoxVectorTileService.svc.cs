@@ -23,7 +23,7 @@ using NetTopologySuite.Index.Quadtree;
 
 using vector_tile;
 
-namespace Demo2.ws
+namespace MapTubeV
 {
     
     // NOTE: You can use the "Rename" command on the "Refactor" menu to change the class name "MapBoxVectorService" in code, svc and config file together.

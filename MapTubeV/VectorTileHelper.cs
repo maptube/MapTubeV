@@ -10,7 +10,7 @@ using vector_tile;
 using GeoAPI.Geometries;
 using NetTopologySuite.Geometries;
 
-namespace Demo2.ws
+namespace MapTubeV
 {
     /// <summary>
     /// Helper for creating vector tiles from GeoAPI geometry

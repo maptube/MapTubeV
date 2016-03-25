@@ -7,7 +7,7 @@ using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Text;
 
-namespace Demo2.ws
+namespace MapTubeV
 {
     // NOTE: You can use the "Rename" command on the "Refactor" menu to change the interface name "IMapBoxVectorTileService" in both code and config file together.
     [ServiceContract]
