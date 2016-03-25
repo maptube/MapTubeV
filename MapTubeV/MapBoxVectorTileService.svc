@@ -1,0 +1,1 @@
+﻿<%@ ServiceHost Language="C#" Debug="true" Service="Demo2.ws.MapBoxVectorTileService" CodeBehind="MapBoxVectorTileService.svc.cs" Factory="System.ServiceModel.Activation.WebServiceHostFactory" %>
