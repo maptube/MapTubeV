@@ -112,7 +112,9 @@
     <Content Include="MapBoxVectorTileService.svc" />
     <Content Include="vs2015-readme.txt" />
     <Content Include="Service1.svc" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CircularBuffer.cs" />
@@ -121,6 +123,8 @@
     <Compile Include="MapBoxVectorTileService.svc.cs">
       <DependentUpon>MapBoxVectorTileService.svc</DependentUpon>
     </Compile>
+    <Compile Include="MapCache.cs" />
+    <Compile Include="MercatorProjection.cs" />
     <Compile Include="Service1.svc.cs">
       <DependentUpon>Service1.svc</DependentUpon>
     </Compile>
@@ -129,8 +133,10 @@
     <Compile Include="ShapeUtils.cs" />
     <Compile Include="Singleton.cs" />
     <Compile Include="TileRequestorZXY.cs" />
+    <Compile Include="Utils.cs" />
     <Compile Include="VectorTile.cs" />
     <Compile Include="VectorTileHelper.cs" />
+    <Compile Include="Version.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
