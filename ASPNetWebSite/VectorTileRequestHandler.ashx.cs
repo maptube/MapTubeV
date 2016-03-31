@@ -22,7 +22,7 @@ namespace ASPNetWebSite
             if (request == null) request = "t"; //default to tile request if not specified
             if (request == "t") //?r=t&u=[descriptoruri](&s=[timetag])&t=[tilestring] request for a tile
             {
-                ProcessTileRequest(context);
+//                ProcessTileRequest(context);
             }
             else if (request == "b") //?r=b&u=[descriptoruri] request for geographic bounds
             {
@@ -30,7 +30,7 @@ namespace ASPNetWebSite
             }
             else if (request == "v") //?r=v request for version number
             {
-                ProcessVersionNumberRequest(context);
+//                ProcessVersionNumberRequest(context);
             }
             else
             {
@@ -38,6 +38,11 @@ namespace ASPNetWebSite
                 context.Response.ContentType = "text/plain";
                 context.Response.Write("Unrecognised request: " + context.Request.RawUrl);
             }
+        }
+
+        private void ProcessTileRequest()
+        {
+            //TODO: ?
         }
 
         public bool IsReusable

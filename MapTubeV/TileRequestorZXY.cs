@@ -51,42 +51,42 @@ namespace MapTubeV
         //}
         //NOW IN UTILS!!!!!
 
+        public void GetEnvelopeForTile(int TileZ, int TileX, int TileY, out Envelope WGS84TileExtents, out Envelope MercTileExtents)
+        {
+            //8,125,83
+            //6,31,21
+            //WGS84 datum (longitude/latitude): -5.625 48.922499263758254, 0 52.482780222078205
+            //Spherical Mercator (meters): -626172.1357121654 6261721.357121639, 0 6887893.492833804
+            //see: http://www.maptiler.org/google-maps-coordinates-tile-bounds-projection/
+
+            //work out tile extents
+            int Size = (int)Math.Pow(2, TileZ); //number of tiles along one side
+
+            double Deg_x = 360.0 / Size * TileX - 180.0;
+            double Deg_x2 = 360.0 / Size * (TileX + 1) - 180.0;
+            //positive latitude is in the Northern Hemisphere, but tile origin is top left, so y is reversed, but still need min and max the right way around
+            double Deg_y = 180.0 - 360.0 / Size * TileY; // 360.0 / Size * (Size - TileY) - 180.0;
+            double Deg_y2 = 180.0 - 360.0 / Size * (TileY + 1); // 360.0 / Size * (Size - TileY + 1) - 180.0;
+            double[] sw = MercatorProjection.toDegLonLat(Deg_x, Deg_y);
+            double[] ne = MercatorProjection.toDegLonLat(Deg_x2, Deg_y2);
+            WGS84TileExtents = new Envelope(sw[0], ne[0], sw[1], ne[1]);
+
+            //project Mercator extents into WGS84 (this is a metres extents box to match the projected data)
+            double[] mercSW = MercatorProjection.toPixel(sw[0], sw[1]);
+            double[] mercNE = MercatorProjection.toPixel(ne[0], ne[1]);
+            MercTileExtents = new Envelope(mercSW[0], mercNE[0], mercSW[1], mercNE[1]);
+        }
+
         public bool RequestTile(string CacheKey, string TimeTag, int TileZ, int TileX, int TileY, string ContextPath, out Tile VTile)
         {
             try {
                 CacheKey = Utils.GetAbsoluteUri(CacheKey, ContextPath);
 
-                //8,125,83
-                //6,31,21
-                //WGS84 datum (longitude/latitude): -5.625 48.922499263758254, 0 52.482780222078205
-                //Spherical Mercator (meters): -626172.1357121654 6261721.357121639, 0 6887893.492833804
-                //see: http://www.maptiler.org/google-maps-coordinates-tile-bounds-projection/
-
-                //work out tile extents
-                int Size = (int)Math.Pow(2, TileZ); //number of tiles along one side
-
-                double Deg_x = 360.0 / Size * TileX - 180.0;
-                double Deg_x2 = 360.0 / Size * (TileX + 1) - 180.0;
-                //positive latitude is in the Northern Hemisphere, but tile origin is top left, so y is reversed, but still need min and max the right way around
-                double Deg_y = 180.0 - 360.0 / Size * TileY; // 360.0 / Size * (Size - TileY) - 180.0;
-                double Deg_y2 = 180.0 - 360.0 / Size * (TileY + 1); // 360.0 / Size * (Size - TileY + 1) - 180.0;
-                double[] sw = MercatorProjection.toDegLonLat(Deg_x, Deg_y);
-                double[] ne = MercatorProjection.toDegLonLat(Deg_x2, Deg_y2);
-                Envelope WGS84TileExtents = new Envelope(sw[0], ne[0], sw[1], ne[1]);
-
-                //project Mercator extents into WGS84 (this is a metres extents box to match the projected data)
-                double[] mercSW = MercatorProjection.toPixel(sw[0], sw[1]);
-                double[] mercNE = MercatorProjection.toPixel(ne[0], ne[1]);
-                Envelope MercTileExtents = new Envelope(mercSW[0], mercNE[0], mercSW[1], mercNE[1]);
-
+                Envelope WGS84TileExtents, MercTileExtents;
+                GetEnvelopeForTile(TileZ, TileX, TileY, out WGS84TileExtents, out MercTileExtents);
                 //debug
                 System.Diagnostics.Debug.WriteLine("WGS84TileExtents: " + WGS84TileExtents);
                 System.Diagnostics.Debug.WriteLine("MercTileExtents: " + MercTileExtents);
-
-                VectorTileHelper VTHelper = new VectorTileHelper("mytilepoints"); //TODO: need a unique name based on the shapefile name here
-
-                //TODO: pull the shapefile data from the geometry cache
-                //and draw onto the vector tile
 
                 return DrawTile(CacheKey,TimeTag,out VTile,WGS84TileExtents,MercTileExtents);
             }

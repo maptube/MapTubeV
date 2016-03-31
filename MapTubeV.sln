@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASPNetWebSite", "ASPNetWebS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapTubeV", "MapTubeV\MapTubeV.csproj", "{87BD0410-88D6-4CA1-8157-C250872EA1F5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapTubeVUnitTests", "MapTubeVUnitTests\MapTubeVUnitTests.csproj", "{B445DF8F-FAEC-42CB-BAEC-1D4908FBC54D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{87BD0410-88D6-4CA1-8157-C250872EA1F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87BD0410-88D6-4CA1-8157-C250872EA1F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87BD0410-88D6-4CA1-8157-C250872EA1F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B445DF8F-FAEC-42CB-BAEC-1D4908FBC54D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B445DF8F-FAEC-42CB-BAEC-1D4908FBC54D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B445DF8F-FAEC-42CB-BAEC-1D4908FBC54D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B445DF8F-FAEC-42CB-BAEC-1D4908FBC54D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

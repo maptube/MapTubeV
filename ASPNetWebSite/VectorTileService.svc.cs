@@ -44,7 +44,7 @@ namespace ASPNetWebSite
             {
                 vector_tile.Tile VTile;
                 MapTubeV.TileRequestorZXY requestor = new MapTubeV.TileRequestorZXY(); //there's no overhead to creating one of these, or we could make a factory
-                requestor.RequestTile(CacheKey,null,TileZ,TileX,TileY,null,out VTile); //TODO: using time tag and context as both null - REMOVE?
+                requestor.RequestTile(CacheKey, null, TileZ, TileX, TileY, null, out VTile); //TODO: using time tag and context as both null - REMOVE?
                 VTile.WriteTo(ms);
             }
             finally
@@ -58,4 +58,5 @@ namespace ASPNetWebSite
             System.Diagnostics.Debug.WriteLine("Completed tile " + Z + " " + X + " " + Y);
             return ms;
         }
+    }
 }

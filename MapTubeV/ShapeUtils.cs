@@ -134,10 +134,10 @@ namespace MapTubeV
         public static string GetPRJ(string InFilename)
         {
             string prj = "";
-            string shpFile = Path.ChangeExtension(InFilename, "prj");
-            if (File.Exists(InFilename))
+            string prjFilename = Path.ChangeExtension(InFilename, "prj");
+            if (File.Exists(prjFilename))
             {
-                prj = File.ReadAllText(InFilename);
+                prj = File.ReadAllText(prjFilename);
             }
             return prj;
         }

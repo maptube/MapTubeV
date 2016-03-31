@@ -86,7 +86,7 @@ namespace MapTubeV
         /// e.g. www.maptube.org/userid/guid/basename</param>
         public void CacheGeometryFile(string CacheKey)
         {
-            if (string.IsNullOrEmpty(LocalCacheRoot)) return; //not using a local cache, so just return
+/*            if (string.IsNullOrEmpty(LocalCacheRoot)) return; //not using a local cache, so just return
 
             string LocalBase = GetLocalBaseFilename(CacheKey); //includes basename, but no extension on local system
             string LocalGeomFilename = LocalBase + GeometryFileDB.GeomFileExt;
@@ -165,6 +165,7 @@ namespace MapTubeV
                     }
                 }
             }
+*/
         }
 
         /// <summary>
@@ -181,17 +182,21 @@ namespace MapTubeV
         /// <returns>The full path to the GeometryDB data files, including the basename of the actual data files but no extension</returns>
         public string GetRemoteBaseFilename(string Key, out string Root, out string Username, out string Password)
         {
-            string[] Dirs = Key.Split(new char[] { '/', '\\' });
-            //string Root = GeoDataSourceInfo.GetGeometrySource(Dirs[0]); //e.g. www.maptube.org
-            GeometrySource source = GeoDataSourceInfo.GetGeometrySourceRecord(Dirs[0]); //e.g. www.maptube.org
-            Root = source.Directory; //need to keep an unmodified version in addition to BaseDir
-            Username = source.Username;
-            Password = source.Password;
-            //now add the relative path to the file extracted from the key to the root directory for the datasource
-            string BaseDir = Root;
-            for (int i = 1; i < Dirs.Length; i++)
-                BaseDir = Path.Combine(BaseDir, Dirs[i]);
-            return BaseDir;
+            /*
+                        string[] Dirs = Key.Split(new char[] { '/', '\\' });
+                        //string Root = GeoDataSourceInfo.GetGeometrySource(Dirs[0]); //e.g. www.maptube.org
+                        GeometrySource source = GeoDataSourceInfo.GetGeometrySourceRecord(Dirs[0]); //e.g. www.maptube.org
+                        Root = source.Directory; //need to keep an unmodified version in addition to BaseDir
+                        Username = source.Username;
+                        Password = source.Password;
+                        //now add the relative path to the file extracted from the key to the root directory for the datasource
+                        string BaseDir = Root;
+                        for (int i = 1; i < Dirs.Length; i++)
+                            BaseDir = Path.Combine(BaseDir, Dirs[i]);
+                        return BaseDir;
+            */
+            Root = ""; Username = ""; Password = "";
+            return "";
         }
 
         /// <summary>
@@ -202,15 +207,18 @@ namespace MapTubeV
         /// <returns></returns>
         public string GetLocalBaseFilename(string Key)
         {
-            string[] Dirs = Key.Split(new char[] { '/', '\\' });
-            string BaseDir = LocalCacheRoot;
-            if (string.IsNullOrEmpty(BaseDir))
-                BaseDir = GeoDataSourceInfo.GetGeometrySource(Dirs[0]);
-            //now add the relative path to the file extracted from the key to the root directory for the datasource
-            for (int i = 1; i < Dirs.Length; i++)
-                BaseDir = Path.Combine(BaseDir, Dirs[i]);
+            /*
+                        string[] Dirs = Key.Split(new char[] { '/', '\\' });
+                        string BaseDir = LocalCacheRoot;
+                        if (string.IsNullOrEmpty(BaseDir))
+                            BaseDir = GeoDataSourceInfo.GetGeometrySource(Dirs[0]);
+                        //now add the relative path to the file extracted from the key to the root directory for the datasource
+                        for (int i = 1; i < Dirs.Length; i++)
+                            BaseDir = Path.Combine(BaseDir, Dirs[i]);
 
-            return BaseDir;
+                        return BaseDir;
+            */
+            return "";
         }
 
         /// <summary>
@@ -225,36 +233,39 @@ namespace MapTubeV
         /// <returns>A custom feature</returns>
         public CustomFeature LoadData(string Key)
         {
-            CustomFeature f = new CustomFeature();
+            /*
+                        CustomFeature f = new CustomFeature();
 
-            //this is a copy of GetCacheDir, but with extra code to cope with the feature id on the end
-            string[] Dirs = Key.Split(new char[] { '/', '\\' });
-            //string Root = GeoDataSourceInfo.GetGeometrySource(Dirs[0]); //e.g. www.maptube.org
-            //GeometrySource GeomSource = GeoDataSourceInfo.GetGeometrySourceRecord(Dirs[0]); //e.g. www.maptube.org
+                        //this is a copy of GetCacheDir, but with extra code to cope with the feature id on the end
+                        string[] Dirs = Key.Split(new char[] { '/', '\\' });
+                        //string Root = GeoDataSourceInfo.GetGeometrySource(Dirs[0]); //e.g. www.maptube.org
+                        //GeometrySource GeomSource = GeoDataSourceInfo.GetGeometrySourceRecord(Dirs[0]); //e.g. www.maptube.org
 
-            string strFID = Dirs[Dirs.Length - 1].Substring(1); //strip leading f
-            int FID = Convert.ToInt32(strFID);
-            //now add the relative path to the file extracted from the key to the root directory for the datasource
-            //string BaseDir = Root;
-            //string BaseDir = GeomSource.Directory;
-            string BaseDir = LocalCacheRoot; //geometry file already cached locally
-            for (int i = 1; i < Dirs.Length - 1; i++)
-                BaseDir = Path.Combine(BaseDir, Dirs[i]);
+                        string strFID = Dirs[Dirs.Length - 1].Substring(1); //strip leading f
+                        int FID = Convert.ToInt32(strFID);
+                        //now add the relative path to the file extracted from the key to the root directory for the datasource
+                        //string BaseDir = Root;
+                        //string BaseDir = GeomSource.Directory;
+                        string BaseDir = LocalCacheRoot; //geometry file already cached locally
+                        for (int i = 1; i < Dirs.Length - 1; i++)
+                            BaseDir = Path.Combine(BaseDir, Dirs[i]);
 
-            f.the_geom = GeometryFileDB.GetGeometry(BaseDir, FID);
+                        f.the_geom = GeometryFileDB.GetGeometry(BaseDir, FID);
 
-            //TODO: need to do attributes as well
-            //and do a join with a csv file if necessary
-            //NO? This is only a single feature, so you don't need to de-serialize the whole attribute data
-            //The datatable is part of the regular descriptor
-            //DataTable dt
-            //string AttrFilename = Path.Combine(this.CacheDir, DestDir + "/" + BaseFileName + "/" + BaseFileName + ".attr";
-            //using (FileStream fsAttr = new FileStream(AttrFilename, FileMode.Create))
-            //{
-            //    binFormat.Serialize(fsAttr, dt);
-            //}
+                        //TODO: need to do attributes as well
+                        //and do a join with a csv file if necessary
+                        //NO? This is only a single feature, so you don't need to de-serialize the whole attribute data
+                        //The datatable is part of the regular descriptor
+                        //DataTable dt
+                        //string AttrFilename = Path.Combine(this.CacheDir, DestDir + "/" + BaseFileName + "/" + BaseFileName + ".attr";
+                        //using (FileStream fsAttr = new FileStream(AttrFilename, FileMode.Create))
+                        //{
+                        //    binFormat.Serialize(fsAttr, dt);
+                        //}
 
-            return f;
+                        return f;
+            */
+            return null;
         }
 
         /// <summary>

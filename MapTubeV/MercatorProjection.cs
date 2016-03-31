@@ -108,7 +108,72 @@ namespace MapTubeV
             return deg * DEG2RAD;
         }
 
+        #region reprojection
+
         /// <summary>
+        /// Reproject a list of features in the given origin projection system into Google Mercator.
+        /// </summary>
+        /// <param name="features">The list of features that we're going to transform</param>
+        /// <param name="OriginPRJ">The origin prj string that we're reprojecting the coordinates from</param>
+        public static void ReprojectOldAndSlow(ref List<Feature> features, string OriginPRJ)
+        {
+            CoordinateSystemFactory cf = new CoordinateSystemFactory();
+            CoordinateSystem originCS = (CoordinateSystem)cf.CreateFromWkt(OriginPRJ);
+            //NOTE: not using EPSG:3857 (new) or EPSG:3587 (old) as they don't work. The method I'm using is to reproject into WGS84
+            //and then convert from that to Google using the formulas in this class. This is the only way it will work, but I would
+            //like to be able to do it in one go.
+            CoordinateSystem destCS = (CoordinateSystem)GeographicCoordinateSystem.WGS84;
+
+            CoordinateTransformationFactory ctFact = new CoordinateTransformationFactory();
+            CoordinateTransformation transformation = (CoordinateTransformation)ctFact.CreateFromCoordinateSystems(originCS, destCS);
+            MathTransform mt = (MathTransform)transformation.MathTransform;
+
+            GeometryFactory gf = new GeometryFactory();
+
+            int Count = 0;
+            int Total = features.Count;
+            foreach (Feature f in features)
+            {
+                Geometry geom = (Geometry)f.Geometry;
+                int NumGeom = geom.NumGeometries;
+                System.Diagnostics.Debug.WriteLine("Feature " + Count + "/" + Total + " NumGeoms=" + NumGeom);
+                for (int N = 0; N < NumGeom; N++)
+                {
+                    Geometry geomN = (Geometry)geom.GetGeometryN(N);
+                    Coordinate[] coords = geomN.Coordinates;
+                    double[] origpts = new double[] { 0, 0 };
+                    int NumPts = geomN.Coordinates.Length;
+                    System.Diagnostics.Debug.WriteLine("GeomN=" + N + " NumPts=" + NumPts);
+                    for (int i = 0; i < NumPts; i++)
+                    {
+                        //transform into WGS84
+                        origpts[0] = coords[i].X;
+                        origpts[1] = coords[i].Y;
+                        double[] pts = mt.Transform(origpts);
+                        if (pts[1] > 84) pts[1] = 84;
+                        else if (pts[1] < -84) pts[1] = -84;
+                        //now transform into Google
+                        double mercX = MercatorProjection.lonToX(pts[0]);
+                        double mercY = MercatorProjection.latToY(pts[1]);
+                        coords[i].X = mercX;
+                        coords[i].Y = mercY;
+                    }
+                    //now put the coords back into the geometry in one go - otherwise you hit a big performance problem
+                    //Only setting geom.Coordinates[i] once means that this is now only taking minutes instead of hours.
+                    for (int i = 0; i < NumPts; i++) geomN.Coordinates[i] = coords[i]; //THIS IS THE BIG PERFORMANCE HIT! The only way around this would be to transform the geom recursively.
+
+                    //put the new geometry back and we're done with this feature
+                    geomN.GeometryChanged();
+                }
+                geom.GeometryChanged();
+                f.Geometry = geom;
+                ++Count;
+            }
+            //result is in the ref features parameter so we're not moving big chunks of memory around
+        }
+
+        /// <summary>
+        /// This is a higher performance reproject using the OGC geometry type correctly, not just manipulating points.
         /// Reproject a list of features in the given origin projection system into Google Mercator.
         /// </summary>
         /// <param name="features">The list of features that we're going to transform</param>
@@ -128,33 +193,128 @@ namespace MapTubeV
 
             GeometryFactory gf = new GeometryFactory();
 
+            int Count = 0;
+            int Total = features.Count;
             foreach (Feature f in features)
             {
                 Geometry geom = (Geometry)f.Geometry;
-                Coordinate[] coords = geom.Coordinates;
-                double[] origpts = new double[] { 0, 0 };
-                int N = geom.Coordinates.Length;
-                for (int i = 0; i < N; i++)
-                {
-                    //transform into WGS84
-                    origpts[0] = coords[i].X;
-                    origpts[1] = coords[i].Y;
-                    double[] pts = mt.Transform(origpts);
-                    //now transform into Google
-                    double mercX = MercatorProjection.lonToX(pts[0]);
-                    double mercY = MercatorProjection.latToY(pts[1]);
-                    coords[i].X = mercX;
-                    coords[i].Y = mercY;
-                }
-                //now put the coords back into the geometry in one go - otherwise you hit a big performance problem
-                //Only setting geom.Coordinates[i] once means that this is now only taking minutes instead of hours.
-                for (int i = 0; i < N; i++) geom.Coordinates[i] = coords[i]; //THIS IS THE BIG PERFORMANCE HIT! The only way around this would be to transform the geom recursively.
-
-                //put the new geometry back and we're done with this feature
-                geom.GeometryChanged();
+                System.Diagnostics.Debug.WriteLine("Feature " + Count + "/" + Total);
+                Geometry projGeom = ReprojectGeometry(geom,mt,gf);
                 f.Geometry = geom;
+                ++Count;
             }
-            //result is in the ref features parameter so we're not moving big chunks of memory around
         }
+
+        public static Geometry ReprojectGeometry(Geometry geom, MathTransform mt,GeometryFactory gf)
+        {
+            Geometry projGeom = null;
+
+            string geomType = geom.GeometryType;
+            if (geomType=="Point")
+            {
+                projGeom = ReprojectPoint((Point)geom, mt, gf);
+            }
+            else if (geomType=="LineString")
+            {
+                projGeom = ReprojectLineString((LineString)geom, mt, gf);
+            }
+            else if (geomType=="Polygon")
+            {
+                projGeom = ReprojectPolygon((Polygon)geom, mt, gf);
+            }
+            else if (geomType=="MultiPoint")
+            {
+                IPoint[] pts = new IPoint[geom.NumGeometries];
+                for (int N = 0; N < geom.NumGeometries; N++)
+                {
+                    Geometry geomN = (Geometry)geom.GetGeometryN(N);
+                    Point projGeomN = ReprojectPoint((Point)geomN, mt, gf);
+                    pts[N] = projGeomN;
+                }
+                projGeom = new MultiPoint(pts, gf);
+            }
+            else if (geomType=="MultiLineString")
+            {
+                ILineString[] lines = new ILineString[geom.NumGeometries];
+                for (int N = 0; N < geom.NumGeometries; N++)
+                {
+                    Geometry geomN = (Geometry)geom.GetGeometryN(N);
+                    LineString projGeomN = ReprojectLineString((LineString)geomN, mt, gf);
+                    lines[N] = projGeomN;
+                }
+                projGeom = new MultiLineString(lines, gf);
+            }
+            else if (geomType=="MultiPolygon")
+            {
+                IPolygon[] polys = new IPolygon[geom.NumGeometries];
+                for (int N = 0; N < geom.NumGeometries; N++)
+                {
+                    Geometry geomN = (Geometry)geom.GetGeometryN(N);
+                    Polygon projGeomN = ReprojectPolygon((Polygon)geomN, mt, gf);
+                    polys[N] = projGeomN;
+                }
+                projGeom = new MultiPolygon(polys, gf);
+            }
+            //GeometryCollection?
+            return projGeom;
+        }
+
+        public static Point ReprojectPoint(Point P,MathTransform mt, GeometryFactory gf)
+        {
+            Coordinate[] coord = P.Coordinates;
+            Coordinate[] projCoord = ReprojectCoordinates(coord, mt);
+            return new Point(projCoord[0]);
+        }
+
+        public static LineString ReprojectLineString(LineString LS, MathTransform mt, GeometryFactory gf)
+        {
+            Coordinate[] coords = LS.Coordinates;
+            Coordinate[] projCoords = ReprojectCoordinates(coords, mt);
+            return new LineString(projCoords);
+        }
+
+        public static Polygon ReprojectPolygon(Polygon Poly, MathTransform mt, GeometryFactory gf)
+        {
+            //first the outer ring
+            LinearRing outerRing = (LinearRing)Poly.ExteriorRing;
+            Coordinate[] coords = outerRing.Coordinates;
+            Coordinate[] projCoords = ReprojectCoordinates(coords, mt);
+            LinearRing projOuterRing = new LinearRing(projCoords);
+            //now the holes
+            LinearRing[] projInnerRings = new LinearRing[Poly.NumInteriorRings];
+            for (int i=0; i<Poly.NumInteriorRings; i++)
+            {
+                coords = Poly.InteriorRings[i].Coordinates;
+                projCoords = ReprojectCoordinates(coords, mt);
+                projInnerRings[i] = new LinearRing(projCoords);
+            }
+            return new Polygon(projOuterRing, projInnerRings);
+        }
+
+        public static Coordinate[] ReprojectCoordinates(Coordinate[] coords, MathTransform mt)
+        {
+            int NumPts = coords.Length;
+            Coordinate[] projCoords = new Coordinate[NumPts];
+            double[] origpts = new double[] { 0, 0 };
+            for (int i = 0; i < NumPts; i++)
+            {
+                //transform into WGS84
+                origpts[0] = coords[i].X;
+                origpts[1] = coords[i].Y;
+                double[] pts = mt.Transform(origpts);
+                if (pts[1] > 84) pts[1] = 84;
+                else if (pts[1] < -84) pts[1] = -84;
+                //now transform into Google
+                double mercX = MercatorProjection.lonToX(pts[0]);
+                double mercY = MercatorProjection.latToY(pts[1]);
+                //projCoords[i].X = mercX;
+                //projCoords[i].Y = mercY;
+                projCoords[i] = new Coordinate(mercX, mercY);
+            }
+            return projCoords;
+        }
+
+        #endregion reprojection
+
     }
 }

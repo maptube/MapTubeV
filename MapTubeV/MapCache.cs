@@ -39,6 +39,8 @@ namespace MapTubeV
     /// The geometry store is flushed by a cache manager when it gets too big.
     /// TODO: need to implement the time tags for data that changes
     /// The reason for not using the generic circular buffer is the thread locking problems when loading from remote uris - need a better thread lock
+    /// TODO: implement a daily log file that contains all the work being done downloading and reprojecting shapefiles, where they're coming from, wire time and how long reprojection is
+    /// taking, plus any errors so we can look into the failures. Simplest would be to add a daily text file.
     /// </summary>
     public class MapCache
     {
@@ -51,7 +53,7 @@ namespace MapTubeV
         #region properties
 
         protected int CacheSize = 100; //default circular buffer size of 100
-        private MapDescriptor[] Cache;
+        private MapDescriptor[] Cache; //TODO: why isn't this a circular buffer with a fill delegate? - probably due to the delay loading?
         private int CachePos = 0;
 
         public int MaxCacheSize
@@ -77,6 +79,14 @@ namespace MapTubeV
                 }
                 return Instance;
             }
+        }
+
+        /// <summary>
+        /// Private constructor
+        /// </summary>
+        private MapCache()
+        {
+            Cache = new MapDescriptor[CacheSize];
         }
 
         /// <summary>
@@ -162,6 +172,7 @@ namespace MapTubeV
             MapDescriptor loading_rec = LoadFeatureCollection(DescriptorUri); //was ParseMapDescriptor(DescriptorUri)
             if (loading_rec != null)
             {
+                loading_rec.DescriptorUri = DescriptorUri;
                 loading_rec.IsLoading = false;
                 loading_rec.TimeTag = TimeTag; //only field not set in ParseMapDescriptor
 
@@ -233,6 +244,8 @@ namespace MapTubeV
             //TODO: shapefile load features from uri and cache
             //fill descriptor object and return it for inclusion into the circular buffer
             MapDescriptor data_rec = new MapDescriptor();
+            data_rec.DescriptorUri = DescriptorUri;
+            data_rec.IsLoading = true;
 
             List<Feature> features = null;
 
@@ -270,9 +283,10 @@ namespace MapTubeV
                     wc.DownloadFile(Path.ChangeExtension(DescriptorUri, "prj"), PRJFilename);
                     
                     //now reproject
-                    features = ShapeUtils.LoadShapefile(ReprojectedFilename);
+                    features = ShapeUtils.LoadShapefile(SHPFilename);
                     string prj = ShapeUtils.GetPRJ(SHPFilename);
-                    MercatorProjection.Reproject(ref features, prj);
+                    //MercatorProjection.ReprojectOldAndSlow(ref features, prj); //old and slow
+                    MercatorProjection.Reproject(ref features, prj); //new and fast (I hope)
                     //and save a new shapefile under the reprojected filename
                     ShapeUtils.WriteShapefile(ReprojectedFilename, features);
                 }
@@ -305,6 +319,8 @@ namespace MapTubeV
         /// <returns>The path to the directory in the cache containing this CacheKey's tiles</returns>
         protected string BuildCacheKeyDir(string CacheKey, string TimeTag)
         {
+            string CacheDir = ConfigurationManager.AppSettings["GeometryCacheDirectory"];
+
             //Use either method 1 or method 2, not sure which is best
 
             //Method 1: get a unique directory from the CacheKey by base 64 encoding the full URI

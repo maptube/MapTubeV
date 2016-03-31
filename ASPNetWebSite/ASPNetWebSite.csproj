@@ -80,6 +80,7 @@
   <ItemGroup>
     <Content Include="Global.asax" />
     <Content Include="packages.config" />
+    <Content Include="test\map.html" />
     <Content Include="VectorTileRequestHandler.ashx" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -110,6 +111,9 @@
       <Project>{87bd0410-88d6-4ca1-8157-c250872ea1f5}</Project>
       <Name>MapTubeV</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="test\mapdata\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
