@@ -81,6 +81,7 @@
     <Content Include="Global.asax" />
     <Content Include="packages.config" />
     <Content Include="test\map.html" />
+    <Content Include="test\test.html" />
     <Content Include="VectorTileRequestHandler.ashx" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

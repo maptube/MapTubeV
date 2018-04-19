@@ -117,6 +117,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CacheManager.cs" />
     <Compile Include="CircularBuffer.cs" />
     <Compile Include="GeometryCache.cs" />
     <Compile Include="IMapBoxVectorTileService.cs" />

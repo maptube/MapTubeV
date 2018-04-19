@@ -348,7 +348,8 @@ namespace MapTubeV
             else //DNS and IPV6 are reversed (although IPV6 doesn't used dot notation)
                 for (int i = dirs.Length - 1; i >= 0; i--) path += dirs[i] + "\\";
 
-            //NOTE: port numbers are ignored completely - could add additional dir here if required
+            //NOTE: add additional dir for port number here (MapTubeD doesn't have this)
+            path = path + uri.Port + "\\";
 
             //First, take care of everything up to the query string part of the uri
             //split dirs on forward and backslash just in case and on the query part or a . so the file

@@ -200,7 +200,7 @@ namespace MapTubeV
                 Geometry geom = (Geometry)f.Geometry;
                 System.Diagnostics.Debug.WriteLine("Feature " + Count + "/" + Total);
                 Geometry projGeom = ReprojectGeometry(geom,mt,gf);
-                f.Geometry = geom;
+                f.Geometry = projGeom; //RWM was geom!
                 ++Count;
             }
         }

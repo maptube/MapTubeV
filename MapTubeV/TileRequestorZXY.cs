@@ -123,9 +123,7 @@ namespace MapTubeV
                 names.Add(ColumnName);
                 VTHelper.AddKeyTag(ColumnName); //so we add the keys to the helper which allows us to get the key tag back later
             }
-            //Add an identifier field so we can track where our tiles end up
-            names.Add("MapTubeV");
-            VTHelper.AddKeyTag("true");
+            //NOTE: you could add an identifier field here so we can track where our tiles end up, but it messes up some of the later code and increases the tile size
 
             System.Diagnostics.Debug.WriteLine("Found: " + features.Count + " rows of data");
 
